@@ -13,8 +13,8 @@ _single_ value. With `karat-scalacheck` you gain the ability to produce arbitrar
 in sequence. At each step, properties can be checked.
 
 ```scala
-libraryDependencies += "com.xebia" %% "karat-scalacheck"        % "0.0.0" % Test
-libraryDependencies += "com.xebia" %% "karat-scalacheck-effect" % "0.0.0" % Test
+libraryDependencies += "com.xebia" %% "karat-scalacheck"        % "0.0.2" % Test
+libraryDependencies += "com.xebia" %% "karat-scalacheck-effect" % "0.0.2" % Test
 ```
 
 # Copyright
