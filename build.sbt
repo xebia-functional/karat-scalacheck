@@ -1,35 +1,5 @@
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-//
-//ThisBuild / organization := "com.xebia"
-//ThisBuild / scalaVersion := "3.3.0"
-//
-//addCommandAlias("ci-test", "scalafmtCheckAll; scalafmtSbtCheck; ++test")
-//addCommandAlias("ci-docs", "github; headerCreateAll")
-//addCommandAlias("ci-publish", "github; ci-release")
-//
-//lazy val root = (project in file("."))
-//  .settings(
-//    name := "karat-scalacheck",
-//    version := "0.0.1-SNAPSHOT",
-//    libraryDependencies ++= Seq(
-//      "org.typelevel"  %% "cats-core"               % "2.9.0",
-//      "org.scalacheck" %% "scalacheck"              % "1.17.0",
-//      "com.47deg.karat" % "karat-common-jvm"        % "0.1.2",
-//      "org.scalameta"  %% "munit"                   % "0.7.29"  % Test,
-//      "org.typelevel"  %% "cats-effect"             % "3.5.0"   % Test,
-//      "org.typelevel"  %% "scalacheck-effect"       % "1.0.4"   % Test,
-//      "org.typelevel"  %% "munit-cats-effect-3"     % "1.0.7"   % Test,
-//      "org.typelevel"  %% "scalacheck-effect-munit" % "1.0.4"   % Test,
-//      "org.http4s"     %% "http4s-ember-server"     % "0.23.20" % Test,
-//      "org.http4s"     %% "http4s-ember-client"     % "0.23.20" % Test,
-//      "org.http4s"     %% "http4s-circe"            % "0.23.20" % Test,
-//      "org.http4s"     %% "http4s-dsl"              % "0.23.20" % Test,
-//      "io.circe"       %% "circe-generic"           % "0.14.5"  % Test
-//    ),
-//    testFrameworks += new TestFramework("munit.Framework")
-//  )
-
 import sbt.internal.ProjectMatrix
 
 val scala2_12 = "2.12.18"
