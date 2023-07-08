@@ -5,7 +5,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import karat.concrete.FormulaKt.{always, predicate}
 import karat.concrete.progression.{Info, Step}
-import karat.scalacheck.Scalacheck.{Formula, checkFormula}
+import karat.scalacheck.Scalacheck.{checkFormula, Formula}
 import munit.{CatsEffectSuite, ScalaCheckEffectSuite}
 import org.scalacheck.Prop._
 import org.scalacheck.effect.PropF
@@ -41,8 +41,7 @@ class TestCounter extends CatsEffectSuite with ScalaCheckEffectSuite {
     case Action.Increment => new Step(state + 1, 0)
     case Action.Read =>
       new Step(
-        state,
-        {
+        state, {
           if (state == 10) throw new RuntimeException("ERROR!")
           state + 1
         }
@@ -51,17 +50,15 @@ class TestCounter extends CatsEffectSuite with ScalaCheckEffectSuite {
 
   def formula: Formula[Info[Action, Int, Int]] =
     always {
-      predicate(
-        (item: Info[Action, Int, Int]) => {
-          // TODO: provide better accessors
-          val status = item.getAction match {
-            case Action.Read if item.getResponse >= 0 => Prop.True
-            case Action.Read => Prop.False
-            case _ => Prop.True
-          }
-          Prop.Result(status)
+      predicate { (item: Info[Action, Int, Int]) =>
+        // TODO: provide better accessors
+        val status = item.getAction match {
+          case Action.Read if item.getResponse >= 0 => Prop.True
+          case Action.Read => Prop.False
+          case _ => Prop.True
         }
-      )
+        Prop.Result(status)
+      }
     }
 
   val initialState: Int = 0
@@ -87,13 +84,14 @@ class TestCounter extends CatsEffectSuite with ScalaCheckEffectSuite {
   }
 
   test("checkRightIO") {
-    PropF.forAllF(model.gen) { actions =>
-      checkFormula[IO, Action, Int, Int](
-        actions,
-        IO(initialState),
-        (action: Action, state: Int) => IO(stepAction(action, state))
-      )(initialFormula).toPropF
-    }.check()
+    PropF
+      .forAllF(model.gen) { actions =>
+        checkFormula[IO, Action, Int, Int](
+          actions,
+          IO(initialState),
+          (action: Action, state: Int) => IO(stepAction(action, state))
+        )(initialFormula).toPropF
+      }.check()
   }
 
   // property("checkWrong") = forAll(model.gen) { actions =>

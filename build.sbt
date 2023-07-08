@@ -85,3 +85,23 @@ lazy val `karat-scalacheck-effect`: ProjectMatrix =
     .settings(libraryDependencies += "org.typelevel" %% "scalacheck-effect" % "1.0.4")
     .settings(scalacOptions --= Seq("-Werror", "-Xfatal-warnings"))
     .jvmPlatform(scalaVersions = allScalaVersions)
+
+lazy val `karat-scalacheck-http4s-sample`: ProjectMatrix =
+  (projectMatrix in file("modules/karat-scalacheck-http4s-sample"))
+    .dependsOn(`karat-scalacheck-effect` % Test)
+    .settings(description := "TODO")
+    .settings(publish / skip := true)
+    .settings(
+      libraryDependencies ++= Seq(
+        "org.http4s"    %% "http4s-ember-server"     % "0.23.20",
+        "org.http4s"    %% "http4s-ember-client"     % "0.23.20",
+        "org.http4s"    %% "http4s-circe"            % "0.23.20",
+        "org.http4s"    %% "http4s-dsl"              % "0.23.20",
+        "io.circe"      %% "circe-generic"           % "0.14.5",
+        "org.typelevel" %% "munit-cats-effect-3"     % "1.0.7" % Test,
+        "org.typelevel" %% "scalacheck-effect"       % "1.0.4" % Test,
+        "org.typelevel" %% "scalacheck-effect-munit" % "1.0.4" % Test
+      )
+    )
+    .settings(scalacOptions --= Seq("-Werror", "-Xfatal-warnings"))
+    .jvmPlatform(scalaVersions = allScalaVersions)

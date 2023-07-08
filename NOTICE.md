@@ -4,6 +4,6 @@
 
 karat-scalacheck
 
-Copyright (c) 2023 Xebia Functional Open Source. All rights reserved.
+Copyright (c)  com.xebia. All rights reserved.
 
-Licensed under Apache-2.0. See [LICENSE](LICENSE.md) for terms.
+Licensed under . See [LICENSE](LICENSE.md) for terms.

@@ -31,7 +31,7 @@ object Scalacheck {
   }
 
   def checkFormula[Action, State, Response](actions: List[Action], initial: State, step: (Action, State) => Option[Step[State, Response]])(
-    formula: Formula[Info[Action, State, Response]]
+      formula: Formula[Info[Action, State, Response]]
   ): Prop.Result = {
     val problem = CheckKt.check[Action, State, Response, Prop.Result, Prop.Result](
       new ScalacheckStepResultManager(),
@@ -44,20 +44,25 @@ object Scalacheck {
     Option(problem).flatMap(p => Option(p.getError)).getOrElse(Prop.Result(status = Prop.True))
   }
 
-  def checkFormula[F[_] : Monad, Action, State, Response](actions: List[Action], initial: F[State], step: (Action, State) => F[Option[Step[State, Response]]])(
-    formula: Formula[Info[Action, State, Response]]
+  def checkFormula[F[_]: Monad, Action, State, Response](
+      actions: List[Action],
+      initial: F[State],
+      step: (Action, State) => F[Option[Step[State, Response]]]
+  )(
+      formula: Formula[Info[Action, State, Response]]
   ): F[Prop.Result] = initial.flatMap(checkFormula(new ScalacheckStepResultManager[Info[Action, State, Response]](), step, actions, _, formula))
 
-  def checkFormula[F[_] : Monad, Action, State, Response](
-    resultManager: ScalacheckStepResultManager[Info[Action, State, Response]],
-    step: (Action, State) => F[Option[Step[State, Response]]],
-    actions: List[Action],
-    current: State,
-    formula: Formula[Info[Action, State, Response]]
+  def checkFormula[F[_]: Monad, Action, State, Response](
+      resultManager: ScalacheckStepResultManager[Info[Action, State, Response]],
+      step: (Action, State) => F[Option[Step[State, Response]]],
+      actions: List[Action],
+      current: State,
+      formula: Formula[Info[Action, State, Response]]
   ): F[Prop.Result] = Monad[F].tailRecM((actions, current, formula)) {
     case (Nil, _, formula) =>
       noNullResult(CheckKt.leftToProve(resultManager, formula)).asRight.pure
-    case (action :: rest, current, formula) => step(action, current).flatMap {
+    case (action :: rest, current, formula) =>
+      step(action, current).flatMap {
         case None =>
           noNullResult(CheckKt.leftToProve(resultManager, formula)).asRight.pure
         case Some(oneStepFurther) =>
@@ -67,10 +72,10 @@ object Scalacheck {
           else
             (rest, oneStepFurther.getState, progress.getNext).asLeft.pure
       }
-    }
+  }
 
   private def noNullResult(
-    result: Prop.Result
+      result: Prop.Result
   ): Prop.Result = if (result == null) Prop.Result(status = Prop.True) else result
 
 }
