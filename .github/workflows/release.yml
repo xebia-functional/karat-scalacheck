@@ -25,14 +25,8 @@ jobs:
         uses: olafurpg/setup-scala@v11
         with:
           java-version: adopt@1.11
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: .ruby-version
       - name: Setup GPG
         uses: olafurpg/setup-gpg@v3
-      - name: Setup yq
-        run: sudo snap install yq
       - name: Run pre-conditions
         run: test -f .github/actions.yml && eval "$(yq e '.pre.release // "true"' .github/actions.yml)" || true
       - name: Release new version
