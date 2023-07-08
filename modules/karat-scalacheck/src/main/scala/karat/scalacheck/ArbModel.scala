@@ -1,6 +1,6 @@
 package karat.scalacheck
 
-import org.scalacheck.{Arbitrary, Gen, Prop, Shrink, Test}
+import org.scalacheck.{Arbitrary, Gen}
 
 trait ArbModel[State, Action] {
   def initial: State
