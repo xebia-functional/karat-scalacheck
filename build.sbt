@@ -8,6 +8,7 @@ val scala3 = "3.3.0"
 val allScalaVersions = List(scala2_12, scala2_13, scala3)
 
 ThisBuild / organization := "com.xebia"
+ThisBuild / developers += Developer("xebia-functional", "Xebia Functional", "hello@47deg.com", url("https://github.com/xebia-functional"))
 ThisBuild / scalaVersion := scala2_13
 publish / skip := true
 
