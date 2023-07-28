@@ -19,11 +19,11 @@ package karat.scalacheck.http4s
 import cats.data.Kleisli
 import cats.effect.IO
 import cats.syntax.all.*
-import karat.concrete.FormulaKt.*
 import karat.concrete.progression.{Info, Step}
 import karat.scalacheck.ArbModel
 import karat.scalacheck.Scalacheck.{checkFormula, Formula}
-import karat.scalacheck.effect.instances.*
+import karat.scalacheck.syntax.*
+import karat.scalacheck.effect.syntax.*
 import munit.{CatsEffectSuite, ScalaCheckEffectSuite}
 import org.http4s.*
 import org.http4s.client.Client
@@ -98,36 +98,24 @@ class Http4sSMSpec extends CatsEffectSuite with ScalaCheckEffectSuite:
         case Action.UpdateProduct(_) => Set(200, 404)
         case Action.DeleteProduct(_) => Set(204, 404)
       }
-      always {
-        predicate { (item: Info[Action, Client[IO], Response[IO]]) =>
-          val responseCode = item.getResponse.status.code
-          if validCodes(item.getAction).contains(responseCode) then Prop.Result(Prop.True)
-          else Prop.Result(Prop.False).label(s"Invalid status code $responseCode for action ${item.getAction}")
-        }
-      }
+      always(should(item => validCodes(item.getAction).contains(item.getResponse.status.code)))
 
     val getFormula: Formula[Info[Action, Client[IO], Response[IO]]] =
       always {
         implies(
-          predicate { (item: Info[Action, Client[IO], Response[IO]]) =>
-            if item.getAction.isCreate then Prop.Result(Prop.True) else Prop.Result(Prop.False)
-          },
+          should(_.getAction.isCreate),
           remember { (current: Info[Action, Client[IO], Response[IO]]) =>
             val rememberedId: Option[String] = current.getAction.getId
-            next {
-              always {
-                implies(
-                  predicate { (item: Info[Action, Client[IO], Response[IO]]) =>
-                    item.getAction match
-                      case Action.GetProduct(id) if rememberedId.contains(id) => Prop.Result(Prop.True)
-                      case _ => Prop.Result(Prop.False)
-                  },
-                  predicate { (item: Info[Action, Client[IO], Response[IO]]) =>
-                    if item.getResponse.status.code == 200 then Prop.Result(Prop.True) else Prop.Result(Prop.False)
-                  }
-                )
-              }
-            }
+            afterwards(
+              implies(
+                predicate { (item: Info[Action, Client[IO], Response[IO]]) =>
+                  item.getAction match
+                    case Action.GetProduct(id) if rememberedId.contains(id) => Prop.Result(Prop.True)
+                    case _ => Prop.Result(Prop.False)
+                },
+                should(_.getResponse.status.code == 200)
+              )
+            )
           }
         )
       }
