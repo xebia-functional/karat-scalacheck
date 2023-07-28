@@ -21,7 +21,7 @@ import cats.syntax.all._
 import org.scalacheck.Prop
 import org.scalacheck.effect.PropF
 
-object instances {
+object syntax {
 
   implicit class PropFOps[F[_]](effectProp: F[Prop.Result]) {
     def toPropF(implicit F: MonadThrow[F]): PropF[F] =

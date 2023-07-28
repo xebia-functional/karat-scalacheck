@@ -21,7 +21,7 @@ import cats.syntax.all.*
 import org.scalacheck.Prop
 import org.scalacheck.effect.PropF
 
-object instances:
+object syntax:
 
   extension [F[_]: MonadThrow](effectProp: F[Prop.Result])
     def toPropF: PropF[F] =

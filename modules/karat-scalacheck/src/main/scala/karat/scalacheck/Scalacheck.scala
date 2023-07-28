@@ -28,6 +28,8 @@ import scala.jdk.CollectionConverters._
 object Scalacheck {
   type Atomic[A] = karat.concrete.Atomic[A, Prop.Result]
   type Formula[A] = karat.concrete.Formula[A, Prop.Result]
+  type Predicate[A] = karat.concrete.Predicate[A, Prop.Result]
+  type Remember[A] = karat.concrete.Remember[A, Prop.Result]
 
   class ScalacheckStepResultManager[A] extends RegularStepResultManager[A, Prop.Result, Prop.Result] {
     override def getEverythingOk: Prop.Result = Prop.Result(Prop.True)
