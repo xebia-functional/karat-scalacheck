@@ -29,17 +29,17 @@ import org.scalacheck.{Arbitrary, Gen, Prop}
 
 class TestCounter extends CatsEffectSuite with ScalaCheckEffectSuite {
 
-  object Action extends Enumeration {
-    type Action = Value
-    val Increment, Read = Value
+  sealed trait Action extends Product with Serializable
+  object Action {
+    case object Increment extends Action
+    case object Read extends Action
   }
-  import Action._
 
   val model: ArbModel[Unit, Action] = new StatelessArbModel[Action] {
     override def nexts(): Arbitrary[Option[Action]] = Arbitrary(Gen.some(Gen.oneOf(Action.Increment, Action.Read)))
   }
 
-  val gen: Gen[Action.Value] = Gen.oneOf(Action.Increment, Action.Read)
+  val gen: Gen[Action] = Gen.oneOf(Action.Increment, Action.Read)
 
   def right(action: Action, state: Int): Option[Step[Int, Int]] = Some(action match {
     case Action.Increment => new Step(state + 1, 0)
