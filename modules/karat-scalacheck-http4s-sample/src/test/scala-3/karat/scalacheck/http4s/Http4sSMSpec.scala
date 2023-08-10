@@ -66,18 +66,10 @@ class Http4sSMSpec extends CatsEffectSuite with ScalaCheckEffectSuite:
 
   def idBasedOnState(state: Set[String]): Gen[String] =
     if (state.isEmpty) idGen
-    else {
-      Gen.frequency(
-        (1, idGen),
-        (3, Gen.oneOf(state))
-      )
-    }
+    else Gen.frequency((1, idGen), (3, Gen.oneOf(state)))
 
   val model: ArbModel[Set[String], Action] = new ArbModel[Set[String], Action]:
     def initial: Set[String] = Set.empty
-
-    def getProductGen(state: Set[String]): Gen[Action] =
-      idBasedOnState(state).map(Action.GetProduct(_))
 
     def updateProductGen(state: Set[String]): Gen[Action] =
       for
@@ -89,7 +81,7 @@ class Http4sSMSpec extends CatsEffectSuite with ScalaCheckEffectSuite:
       Gen
         .oneOf[Action](
           Gen.const(Action.GetProducts),
-          getProductGen(state),
+          idBasedOnState(state).map(Action.GetProduct(_)),
           Arbitrary.arbitrary[ProductCatalog].map(Action.CreateProduct(_)),
           updateProductGen(state),
           idBasedOnState(state).map(Action.DeleteProduct(_))
@@ -101,28 +93,28 @@ class Http4sSMSpec extends CatsEffectSuite with ScalaCheckEffectSuite:
       case Action.DeleteProduct(id) => state.-(id)
       case _ => state
 
-    def step(action: Action, c: Client[IO]): IO[Option[Step[Client[IO], Response[IO]]]] =
-      c.run(action.request).use(r => IO.pure(new Step(c, r).some))
+  def executeAction(action: Action, c: Client[IO]): IO[Option[Step[Client[IO], Response[IO]]]] =
+    c.run(action.request).use(r => IO.pure(new Step(c, r).some))
 
-    val statusFormula: Formula[Info[Action, Client[IO], Response[IO]]] =
-      val validCodes: Action => Set[Int] = {
-        case Action.GetProducts => Set(200)
-        case Action.GetProduct(_) => Set(200, 404)
-        case Action.CreateProduct(_) => Set(202, 400)
-        case Action.UpdateProduct(_) => Set(200, 404)
-        case Action.DeleteProduct(_) => Set(204, 404)
-      }
-      always(should(item => validCodes(item.getAction).contains(item.getResponse.status.code)))
+  val statusFormula: Formula[Info[Action, Client[IO], Response[IO]]] =
+    val validCodes: Action => Set[Int] = {
+      case Action.GetProducts => Set(200)
+      case Action.GetProduct(_) => Set(200, 404)
+      case Action.CreateProduct(_) => Set(202, 400)
+      case Action.UpdateProduct(_) => Set(200, 404)
+      case Action.DeleteProduct(_) => Set(204, 404)
+    }
+    always(should(item => validCodes(item.getAction).contains(item.getResponse.status.code)))
 
-    val getFormula: Formula[Info[Action, Client[IO], Response[IO]]] =
-      always {
-        implies(
-          should(_.getAction.isCreate),
-          remember { (current: Info[Action, Client[IO], Response[IO]]) =>
-            val rememberedId: Option[String] = current.getAction.getId
-            afterwards(
-              implies(
-                should {
+  val getFormula: Formula[Info[Action, Client[IO], Response[IO]]] =
+    always {
+      implies(
+        should(_.getAction.isCreate),
+        remember { (current: Info[Action, Client[IO], Response[IO]]) =>
+          val rememberedId: Option[String] = current.getAction.getId
+          afterwards(
+            implies(
+              should {
                   _.getAction match
                     case Action.GetProduct(id) => rememberedId.contains(id)
                     case _ => false
@@ -135,7 +127,7 @@ class Http4sSMSpec extends CatsEffectSuite with ScalaCheckEffectSuite:
       }
 
     val getFormulaEventually: Formula[Info[Action, Client[IO], Response[IO]]] =
-      always {
+                always {
         implies(
           should(_.getAction.isCreate),
           remember { (current: Info[Action, Client[IO], Response[IO]]) =>
@@ -144,8 +136,8 @@ class Http4sSMSpec extends CatsEffectSuite with ScalaCheckEffectSuite:
               implies(
                 should {
                   _.getAction match
-                    case Action.GetProduct(id) => rememberedId.contains(id)
-                    case _ => false
+                  case Action.GetProduct(id) => rememberedId.contains(id)
+                  case _ => false
                 },
                 should(_.getResponse.status.code == 200)
               )
@@ -166,40 +158,40 @@ class Http4sSMSpec extends CatsEffectSuite with ScalaCheckEffectSuite:
                   _.getAction match
                     case Action.GetProduct(id) => rememberedId.contains(id)
                     case _ => false
-                },
-                should(_.getResponse.status.code == 200)
-              )
+              },
+              should(_.getResponse.status.code == 200)
             )
-          }
-        )
-      }
+          )
+        }
+      )
+    }
 
-    test("Verify status"):
-      PropF
-        .forAllF(model.gen) { actions =>
-          val storage: ProductStorage[IO] = ProductStorage.impl[IO].unsafeRunSync()
-          val httpApp: HttpApp[IO] =
-            Kleisli(a => ProductCatalogRoutes.routes[IO](storage).run(a).getOrRaise(new RuntimeException("Route not found!")))
-          val client: Client[IO] = Client.fromHttpApp(httpApp)
-          checkFormula[IO, Action, Client[IO], Response[IO]](actions, IO.pure(client), step)(statusFormula).toPropF
-        }.check()
+  test("Verify status"):
+    PropF
+      .forAllF(model.gen) { actions =>
+        val storage: ProductStorage[IO] = ProductStorage.impl[IO].unsafeRunSync()
+        val httpApp: HttpApp[IO] =
+          Kleisli(a => ProductCatalogRoutes.routes[IO](storage).run(a).getOrRaise(new RuntimeException("Route not found!")))
+        val client: Client[IO] = Client.fromHttpApp(httpApp)
+        checkFormula[IO, Action, Client[IO], Response[IO]](actions, IO.pure(client), executeAction)(statusFormula).toPropF
+      }.check()
 
-    test("Return created product"):
-      PropF
-        .forAllF(model.gen) { actions =>
-          val storage: ProductStorage[IO] = ProductStorage.impl[IO].unsafeRunSync()
-          val httpApp: HttpApp[IO] =
-            Kleisli(a => ProductCatalogRoutes.routes[IO](storage).run(a).getOrRaise(new RuntimeException("Route not found!")))
-          val client: Client[IO] = Client.fromHttpApp(httpApp)
-          checkFormula[IO, Action, Client[IO], Response[IO]](actions, IO.pure(client), step)(getFormulaImmediate).toPropF
-        }.check()
+  test("Return created product"):
+    PropF
+      .forAllF(model.gen) { actions =>
+        val storage: ProductStorage[IO] = ProductStorage.impl[IO].unsafeRunSync()
+        val httpApp: HttpApp[IO] =
+          Kleisli(a => ProductCatalogRoutes.routes[IO](storage).run(a).getOrRaise(new RuntimeException("Route not found!")))
+        val client: Client[IO] = Client.fromHttpApp(httpApp)
+        checkFormula[IO, Action, Client[IO], Response[IO]](actions, IO.pure(client), executeAction)(getFormulaEventually).toPropF
+      }.check()
 
-    test("Eventually return created product"):
-      PropF
-        .forAllF(model.gen) { actions =>
-          val storage: ProductStorage[IO] = ProductStorage.impl[IO].unsafeRunSync()
-          val httpApp: HttpApp[IO] =
-            Kleisli(a => ProductCatalogRoutes.routes[IO](storage).run(a).getOrRaise(new RuntimeException("Route not found!")))
-          val client: Client[IO] = Client.fromHttpApp(httpApp)
-          checkFormula[IO, Action, Client[IO], Response[IO]](actions, IO.pure(client), step)(getFormulaEventually).toPropF
-        }.check()
+  test("Eventually return created product"):
+    PropF
+      .forAllF(model.gen) { actions =>
+        val storage: ProductStorage[IO] = ProductStorage.impl[IO].unsafeRunSync()
+        val httpApp: HttpApp[IO] =
+          Kleisli(a => ProductCatalogRoutes.routes[IO](storage).run(a).getOrRaise(new RuntimeException("Route not found!")))
+        val client: Client[IO] = Client.fromHttpApp(httpApp)
+        checkFormula[IO, Action, Client[IO], Response[IO]](actions, IO.pure(client), executeAction)(getFormulaImmediate).toPropF
+      }.check()
