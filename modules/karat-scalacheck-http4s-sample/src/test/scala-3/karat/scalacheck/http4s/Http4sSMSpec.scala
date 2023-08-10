@@ -115,49 +115,49 @@ class Http4sSMSpec extends CatsEffectSuite with ScalaCheckEffectSuite:
           afterwards(
             implies(
               should {
-                  _.getAction match
-                    case Action.GetProduct(id) => rememberedId.contains(id)
-                    case _ => false
-                },
-                should(_.getResponse.status.code == 200)
-              )
-            )
-          }
-        )
-      }
-
-    val getFormulaEventually: Formula[Info[Action, Client[IO], Response[IO]]] =
-                always {
-        implies(
-          should(_.getAction.isCreate),
-          remember { (current: Info[Action, Client[IO], Response[IO]]) =>
-            val rememberedId: Option[String] = current.getAction.getId
-            eventually(
-              implies(
-                should {
-                  _.getAction match
+                _.getAction match
                   case Action.GetProduct(id) => rememberedId.contains(id)
                   case _ => false
-                },
-                should(_.getResponse.status.code == 200)
-              )
+              },
+              should(_.getResponse.status.code == 200)
             )
-          }
-        )
-      }
+          )
+        }
+      )
+    }
 
-    val getFormulaImmediate: Formula[Info[Action, Client[IO], Response[IO]]] =
-      always {
-        implies(
-          should(_.getAction.isCreate),
-          remember { (current: Info[Action, Client[IO], Response[IO]]) =>
-            val rememberedId: Option[String] = current.getAction.getId
-            next(
-              implies(
-                should {
-                  _.getAction match
-                    case Action.GetProduct(id) => rememberedId.contains(id)
-                    case _ => false
+  val getFormulaEventually: Formula[Info[Action, Client[IO], Response[IO]]] =
+    always {
+      implies(
+        should(_.getAction.isCreate),
+        remember { (current: Info[Action, Client[IO], Response[IO]]) =>
+          val rememberedId: Option[String] = current.getAction.getId
+          eventually(
+            implies(
+              should {
+                _.getAction match
+                  case Action.GetProduct(id) => rememberedId.contains(id)
+                  case _ => false
+              },
+              should(_.getResponse.status.code == 200)
+            )
+          )
+        }
+      )
+    }
+
+  val getFormulaImmediate: Formula[Info[Action, Client[IO], Response[IO]]] =
+    always {
+      implies(
+        should(_.getAction.isCreate),
+        remember { (current: Info[Action, Client[IO], Response[IO]]) =>
+          val rememberedId: Option[String] = current.getAction.getId
+          next(
+            implies(
+              should {
+                _.getAction match
+                  case Action.GetProduct(id) => rememberedId.contains(id)
+                  case _ => false
               },
               should(_.getResponse.status.code == 200)
             )
