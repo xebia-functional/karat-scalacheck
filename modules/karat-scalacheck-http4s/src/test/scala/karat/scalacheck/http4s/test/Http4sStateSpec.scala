@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package karat.scalacheck.http4s
+package karat.scalacheck.http4s.test
 
 import cats.effect.IO
 import munit.{CatsEffectSuite, ScalaCheckEffectSuite}
+import karat.scalacheck.http4s._
 import org.http4s._
 import org.http4s.client.Client
 import org.http4s.implicits._
@@ -37,7 +38,7 @@ class Http4sStateSpec extends CatsEffectSuite with ScalaCheckEffectSuite {
   }
 
   test("checkRight") {
-    PropF.forAllNoShrinkF { (p: ProductCatalog) =>
+    PropF.forAllF { (p: ProductCatalog) =>
       val storage: ProductStorage[IO] = ProductStorage.impl[IO].unsafeRunSync()
       val httpApp: HttpApp[IO] = ProductCatalogRoutes.routes[IO](storage).orNotFound
       val client: Client[IO] = Client.fromHttpApp(httpApp)
