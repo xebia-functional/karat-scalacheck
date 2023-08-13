@@ -37,10 +37,10 @@ lazy val `karat-scalacheck`: ProjectMatrix =
       libraryDependencies ++= Seq(
         "org.typelevel"          %% "cats-core"               % "2.9.0",
         "org.scalacheck"         %% "scalacheck"              % "1.17.0",
-        "com.47deg.karat"         % "karat-common-jvm"        % "0.1.2",
+        "com.xebia.karat"         % "karat-common-jvm"        % "0.1.3",
         "org.scala-lang.modules" %% "scala-collection-compat" % "2.11.0",
         "org.scalameta"          %% "munit"                   % "0.7.29" % Test,
-        "org.typelevel"          %% "cats-effect"             % "3.5.0"  % Test,
+        "org.typelevel"          %% "cats-effect"             % "3.5.1"  % Test,
         "org.typelevel"          %% "munit-cats-effect-3"     % "1.0.7"  % Test,
         "org.typelevel"          %% "scalacheck-effect"       % "1.0.4"  % Test,
         "org.typelevel"          %% "scalacheck-effect-munit" % "1.0.4"  % Test
@@ -59,14 +59,14 @@ lazy val `karat-scalacheck-effect`: ProjectMatrix =
 
 lazy val `karat-scalacheck-http4s`: ProjectMatrix =
   (projectMatrix in file("modules/karat-scalacheck-http4s"))
-    .dependsOn(`karat-scalacheck-effect`)
+    .dependsOn(`karat-scalacheck`, `karat-scalacheck-effect`)
     .settings(description := "TODO")
     .settings(
       libraryDependencies ++= Seq(
-        "org.http4s"    %% "http4s-ember-server"     % "0.23.20",
-        "org.http4s"    %% "http4s-ember-client"     % "0.23.20",
-        "org.http4s"    %% "http4s-circe"            % "0.23.20",
-        "org.http4s"    %% "http4s-dsl"              % "0.23.20",
+        "org.http4s"    %% "http4s-ember-server"     % "0.23.23",
+        "org.http4s"    %% "http4s-ember-client"     % "0.23.23",
+        "org.http4s"    %% "http4s-circe"            % "0.23.23",
+        "org.http4s"    %% "http4s-dsl"              % "0.23.23",
         "io.circe"      %% "circe-generic"           % "0.14.5",
         "org.typelevel" %% "munit-cats-effect-3"     % "1.0.7" % Test,
         "org.typelevel" %% "scalacheck-effect"       % "1.0.4" % Test,
